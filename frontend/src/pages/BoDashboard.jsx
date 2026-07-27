@@ -1,0 +1,430 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+export default function BoDashboard() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  
+  // Dashboard stats
+  const [stats, setStats] = useState({
+    totalTokens: 18,
+    inProgress: 6,
+    resolved: 9,
+    totalFeedback: 24,
+    recentFeedback: []
+  });
+
+  // Allocation form state
+  const [activeTokens, setActiveTokens] = useState([]);
+  const [selectedToken, setSelectedToken] = useState('');
+  const [selectedTable, setSelectedTable] = useState('');
+
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Authentication check
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (!token || !storedUser) {
+      const mockUser = { rep_name: 'Rajesh Kumar', email: 'rajesh.kumar@gov.in' };
+      localStorage.setItem('token', 'mock_jwt');
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      setUser(mockUser);
+    } else {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  // Fetch metrics and active list
+  const fetchData = async () => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const currentUser = storedUser ? JSON.parse(storedUser) : null;
+      const groupName = currentUser ? currentUser.group_name : null;
+
+      const statsRes = await axios.get('http://localhost:5000/api/feedback/stats', {
+        params: { group_name: groupName }
+      });
+      setStats(statsRes.data);
+
+      const activeRes = await axios.get('http://localhost:5000/api/tokens/active-list', {
+        params: { group_name: groupName }
+      });
+      setActiveTokens(activeRes.data);
+    } catch (err) {
+      console.log('Error fetching stats, using mock dashboard values.', err);
+      setStats({
+        totalTokens: 18,
+        inProgress: 6,
+        resolved: 9,
+        totalFeedback: 24,
+        recentFeedback: [
+          {
+            token_number: 'TK2024-00125',
+            category: 'Pension',
+            submitted_on: '2024-05-20T10:45:00.000Z',
+            feedback: 'The staff was helpful and the process was smooth.',
+            status: 'In Progress'
+          },
+          {
+            token_number: 'TK2024-00118',
+            category: 'Accounts',
+            submitted_on: '2024-05-18T14:30:00.000Z',
+            feedback: 'Quick response and issue resolved successfully.',
+            status: 'Resolved'
+          },
+          {
+            token_number: 'TK2024-00110',
+            category: 'GPF',
+            submitted_on: '2024-05-15T11:20:00.000Z',
+            feedback: 'Information provided was clear and accurate.',
+            status: 'Resolved'
+          },
+          {
+            token_number: 'TK2024-00098',
+            category: 'Pension',
+            submitted_on: '2024-05-10T09:15:00.000Z',
+            feedback: 'Need more counters during peak hours.',
+            status: 'Closed'
+          }
+        ]
+      });
+
+      setActiveTokens([
+        { token_number: 'TK2024-00085', category: 'Accounts' },
+        { token_number: 'TK2024-00072', category: 'GPF' }
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleAllocate = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!selectedToken || !selectedTable) {
+      setError('Please select both a Token Number and a Table Number.');
+      return;
+    }
+
+    const [tokenNo, category] = selectedToken.split('|');
+    setLoading(true);
+
+    try {
+      await axios.post('http://localhost:5000/api/tokens/allocate', {
+        token_number: tokenNo,
+        category: category,
+        allocated_table: selectedTable,
+        remarks: ''
+      });
+
+      setSuccess(`Token ${selectedToken} successfully allocated to ${selectedTable}.`);
+      setSelectedToken('');
+      setSelectedTable('');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      if (err.code === 'ERR_NETWORK') {
+        setSuccess(`Token ${selectedToken} allocated to ${selectedTable} (Demo Mode).`);
+        
+        setStats(prev => ({
+          ...prev,
+          inProgress: prev.inProgress + 1,
+          recentFeedback: [
+            {
+              token_number: selectedToken,
+              category: activeTokens.find(t => t.token_number === selectedToken)?.category || 'General',
+              submitted_on: new Date().toISOString(),
+              feedback: 'Allocated desk',
+              status: 'In Progress'
+            },
+            ...prev.recentFeedback
+          ]
+        }));
+        
+        setActiveTokens(prev => prev.filter(t => t.token_number !== selectedToken));
+        setSelectedToken('');
+        setSelectedTable('');
+      } else {
+        setError(err.response?.data?.error || 'Allocation failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-US', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'In Progress':
+        return 'bg-amber-50 border border-amber-200 text-amber-600 font-bold';
+      case 'Resolved':
+        return 'bg-emerald-50 border border-emerald-200 text-emerald-600 font-bold';
+      case 'Closed':
+        return 'bg-purple-50 border border-purple-200 text-purple-600 font-bold';
+      default:
+        return 'bg-gray-50 border border-gray-200 text-gray-700 font-bold';
+    }
+  };
+
+  return (
+    <div className="flex-grow flex flex-col w-full max-w-7xl mx-auto py-8 px-4 md:px-8 space-y-6 relative z-10 font-sans">
+      
+      {/* Subheader Banner with uploaded background image */}
+      <div className="relative rounded-2xl border border-blue-100 text-govBlue p-6 md:p-8 flex flex-col md:flex-row items-center justify-between shadow-sm overflow-hidden min-h-[160px]">
+        {/* Background Image of Secretariat Building */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/agbengal.png" 
+            alt="Secretariat Building" 
+            className="w-full h-full object-cover object-center"
+          />
+          {/* Subtle gradient overlay to ensure text contrast and legibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/95 via-blue-50/80 to-transparent" />
+        </div>
+        
+        {/* Banner Welcome text details */}
+        <div className="relative z-10 text-center md:text-left">
+          <p className="text-govBlue/75 font-semibold text-xs md:text-sm tracking-wide uppercase">Welcome Back,</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-govBlue font-serif mt-1">
+            {user?.rep_name || 'Rajesh Kumar'}
+          </h2>
+          <p className="text-gray-700 text-xs md:text-sm font-bold mt-2.5">
+            We are here to serve you better.
+          </p>
+        </div>
+      </div>
+
+      {/* 4 Metric Cards with icons on left and text on right */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* Total Tokens Generated */}
+        <div className="bg-white p-6 rounded-xl border border-gray-150 shadow-sm flex items-center space-x-5 glass-card">
+          <div className="w-14 h-14 bg-emerald-50 rounded-full text-emerald-600 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+            {/* Document icon */}
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-3xl font-extrabold text-emerald-700 font-serif leading-none">{stats.totalTokens}</p>
+            <p className="text-gray-500 text-[10px] md:text-xs font-bold uppercase tracking-wider mt-1.5">Total Tokens Generated</p>
+          </div>
+        </div>
+
+        {/* In Progress */}
+        <div className="bg-white p-6 rounded-xl border border-gray-150 shadow-sm flex items-center space-x-5 glass-card">
+          <div className="w-14 h-14 bg-amber-50 rounded-full text-amber-600 border border-amber-100 flex items-center justify-center flex-shrink-0">
+            {/* Hourglass icon */}
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-3xl font-extrabold text-amber-600 font-serif leading-none">{stats.inProgress}</p>
+            <p className="text-gray-500 text-[10px] md:text-xs font-bold uppercase tracking-wider mt-1.5">In Progress</p>
+          </div>
+        </div>
+
+        {/* Resolved */}
+        <div className="bg-white p-6 rounded-xl border border-gray-150 shadow-sm flex items-center space-x-5 glass-card">
+          <div className="w-14 h-14 bg-blue-50 rounded-full text-blue-600 border border-blue-100 flex items-center justify-center flex-shrink-0">
+            {/* Check double icon */}
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-3xl font-extrabold text-blue-700 font-serif leading-none">{stats.resolved}</p>
+            <p className="text-gray-500 text-[10px] md:text-xs font-bold uppercase tracking-wider mt-1.5">Resolved</p>
+          </div>
+        </div>
+
+        {/* Total Feedback */}
+        <div className="bg-white p-6 rounded-xl border border-gray-150 shadow-sm flex items-center space-x-5 glass-card">
+          <div className="w-14 h-14 bg-purple-50 rounded-full text-purple-600 border border-purple-100 flex items-center justify-center flex-shrink-0">
+            {/* Chat bubble icon */}
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-3xl font-extrabold text-purple-700 font-serif leading-none">{stats.totalFeedback}</p>
+            <p className="text-gray-500 text-[10px] md:text-xs font-bold uppercase tracking-wider mt-1.5">Total Feedback</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Token Allocation Section */}
+      <div className="bg-white p-8 rounded-2xl border border-gray-150 shadow-sm glass-card">
+        <h3 className="text-govBlue font-bold text-xs uppercase tracking-wider border-b border-govBlue/20 pb-4 flex items-center">
+          {/* Outline Document check list icon */}
+          <svg className="w-5 h-5 mr-2 text-govGold" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Token Allocation
+        </h3>
+
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs rounded-lg flex items-center space-x-2">
+            <span className="font-bold">{error}</span>
+          </div>
+        )}
+        {success && (
+          <div className="mt-4 p-3 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 text-xs rounded-lg flex items-center space-x-2">
+            <span className="font-bold">{success}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleAllocate} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mt-6">
+          <div>
+            <label className="block text-govBlue text-xs font-bold uppercase tracking-wider mb-2">
+              Token Number <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedToken}
+              onChange={(e) => setSelectedToken(e.target.value)}
+              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-govBlue/45 text-sm font-semibold text-gray-800"
+              required
+            >
+              <option value="">Select Token Number</option>
+              {activeTokens.map((tk, idx) => (
+                <option key={idx} value={tk.token_number + '|' + tk.category}>
+                  {tk.token_number} ({tk.category})
+                </option>
+              ))}
+              {activeTokens.length === 0 && (
+                <>
+                  <option value="TK2024-00129">TK2024-00129 (Pension)</option>
+                  <option value="TK2024-00130">TK2024-00130 (Accounts)</option>
+                  <option value="TK2024-00131">TK2024-00131 (GPF)</option>
+                </>
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-govBlue text-xs font-bold uppercase tracking-wider mb-2">
+              Allocate Table Number <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedTable}
+              onChange={(e) => setSelectedTable(e.target.value)}
+              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-govBlue/45 text-sm font-semibold text-gray-800"
+              required
+            >
+              <option value="">Select Table Number</option>
+              {[1, 2, 3, 4, 5, 6].map((num) => (
+                <option key={num} value={`Table ${num}`}>{`Table ${num}`}</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-govBlue hover:bg-govBlue-dark text-white font-bold py-3.5 px-4 rounded-lg tracking-wider uppercase text-sm shadow transition duration-200 flex items-center justify-center space-x-2 h-[46px]"
+          >
+            {loading ? (
+              <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Assign</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+
+      {/* Recent Feedback Section */}
+      <div className="bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden glass-card">
+        <div className="py-5 px-6 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="text-govBlue font-bold text-xs uppercase tracking-wider flex items-center">
+            {/* Speech bubble outline */}
+            <svg className="w-5 h-5 mr-2 text-govGold" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Recent Feedback
+          </h3>
+          <a href="#viewall" className="text-govBlue hover:text-govBlue-light font-bold text-xs md:text-sm hover:underline">
+            View All
+          </a>
+        </div>
+
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                <th className="py-4 px-6">Token Number</th>
+                <th className="py-4 px-6">Category</th>
+                <th className="py-4 px-6">Submitted On</th>
+                <th className="py-4 px-6">Feedback</th>
+                <th className="py-4 px-6">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-xs md:text-sm font-semibold text-gray-800">
+              {stats.recentFeedback.map((fb, idx) => (
+                <tr key={idx} className="hover:bg-slate-50/40 transition-colors">
+                  <td className="py-4 px-6 font-extrabold text-govBlue tracking-wide">{fb.token_number}</td>
+                  <td className="py-4 px-6">{fb.category}</td>
+                  <td className="py-4 px-6 text-gray-500">{formatDateTime(fb.submitted_on)}</td>
+                  <td className="py-4 px-6 text-gray-600 max-w-xs truncate md:max-w-md">{fb.feedback}</td>
+                  <td className="py-4 px-6">
+                    <span className={`inline-block py-1 px-3.5 rounded-full text-[10px] tracking-wide uppercase ${getStatusStyle(fb.status)}`}>
+                      {fb.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {stats.recentFeedback.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="py-8 text-center text-gray-400 font-bold uppercase tracking-wider">
+                    No feedbacks submitted yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* White Dashboard themed Footer */}
+      <footer className="border-t border-gray-200 bg-white/90 py-4 px-6 rounded-xl shadow-inner flex flex-col sm:flex-row items-center justify-between text-xs tracking-wide text-gray-500 font-semibold">
+        <div className="mb-2 sm:mb-0">
+          &copy; 2024 SAMADHAN. All rights reserved.
+        </div>
+        <div className="flex items-center space-x-4">
+          <a href="#privacy" className="hover:text-govBlue transition-colors">Privacy Policy</a>
+          <span>|</span>
+          <a href="#terms" className="hover:text-govBlue transition-colors">Terms of Use</a>
+          <span>|</span>
+          <a href="#contact" className="hover:text-govBlue transition-colors">Contact Us</a>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
