@@ -84,8 +84,8 @@ export default function Header() {
         </div>
 
         {/* Subtitle */}
-        <p className="text-govBlue font-extrabold text-sm md:text-base tracking-[0.08em] uppercase mt-1">
-          Government Support & Service Portal
+        <p className="text-govBlue font-extrabold text-xs md:text-sm tracking-wide mt-1">
+          सरल एकीकृत मध्यम अभिलेख-निधि-पेंशन दोष-हल, आश्वासन एवं निवारण
         </p>
         
         {/* Slogan row with horizontal gold lines and diamond */}
