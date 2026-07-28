@@ -23,7 +23,7 @@ export default function Register() {
         return;
       }
       try {
-        const res = await axios.get(`http://localhost:5000/api/tokens/by-psa?psa_name=${encodeURIComponent(psaDdo)}`);
+        const res = await axios.get(`/api/tokens/by-psa?psa_name=${encodeURIComponent(psaDdo)}`);
         setExistingTokens(res.data);
       } catch (err) {
         console.error('Error fetching existing tokens:', err);
@@ -38,7 +38,7 @@ export default function Register() {
   useEffect(() => {
     const fetchDdos = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/auth/ddos');
+        const response = await axios.get('/api/auth/ddos');
         setDdoList(response.data);
       } catch (err) {
         console.error('Error fetching DDO list, using offline fallback:', err);
@@ -99,7 +99,7 @@ export default function Register() {
         password: 'default_ddo_password_2026' // Default fallback since form has no password field
       };
 
-      const res = await axios.post('http://localhost:5000/api/auth/register', payload);
+      const res = await axios.post('/api/auth/register', payload);
       setRegisteredToken(res.data.token_number || 'N/A');
     } catch (err) {
       console.error(err);

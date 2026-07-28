@@ -42,7 +42,7 @@ export default function AaoDashboard() {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`http://localhost:5000/api/tokens/table/${tableNum}?group_name=${user?.group_name || ''}`);
+      const res = await axios.get(`/api/tokens/table/${tableNum}?group_name=${user?.group_name || ''}`);
       setTokens(res.data);
       
       // Initialize editingRemarks state
@@ -84,7 +84,7 @@ export default function AaoDashboard() {
     setError('');
     setSuccess('');
     try {
-      await axios.post('http://localhost:5000/api/tokens/update-status', {
+      await axios.post('/api/tokens/update-status', {
         token_number: tokenNum,
         status: newStatus,
         remarks: currentRemarks,
@@ -118,7 +118,7 @@ export default function AaoDashboard() {
     setError('');
     setSuccess('');
     try {
-      await axios.post('http://localhost:5000/api/tokens/update-status', {
+      await axios.post('/api/tokens/update-status', {
         token_number: tokenNum,
         status: statusVal,
         remarks: remarkVal,

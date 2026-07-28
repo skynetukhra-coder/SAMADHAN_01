@@ -36,7 +36,7 @@ export default function BoDashboard() {
         const currentUser = storedUser ? JSON.parse(storedUser) : null;
         const groupName = currentUser ? currentUser.group_name : null;
 
-        const res = await axios.get('http://localhost:5000/api/feedback/list', {
+        const res = await axios.get('/api/feedback/list', {
           params: { group_name: groupName }
         });
         setAllFeedbacks(res.data);
@@ -72,12 +72,12 @@ export default function BoDashboard() {
       const currentUser = storedUser ? JSON.parse(storedUser) : null;
       const groupName = currentUser ? currentUser.group_name : null;
 
-      const statsRes = await axios.get('http://localhost:5000/api/feedback/stats', {
+      const statsRes = await axios.get('/api/feedback/stats', {
         params: { group_name: groupName }
       });
       setStats(statsRes.data);
 
-      const activeRes = await axios.get('http://localhost:5000/api/tokens/active-list', {
+      const activeRes = await axios.get('/api/tokens/active-list', {
         params: { group_name: groupName }
       });
       setActiveTokens(activeRes.data);
@@ -145,7 +145,7 @@ export default function BoDashboard() {
     setLoading(true);
 
     try {
-      await axios.post('http://localhost:5000/api/tokens/allocate', {
+      await axios.post('/api/tokens/allocate', {
         token_number: tokenNo,
         category: category,
         allocated_table: selectedTable,

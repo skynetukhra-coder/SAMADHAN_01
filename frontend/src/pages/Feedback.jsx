@@ -41,7 +41,7 @@ export default function Feedback() {
   useEffect(() => {
     const fetchTokens = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tokens');
+        const res = await axios.get('/api/tokens');
         setTokensList(res.data);
       } catch (err) {
         console.log('Error fetching tokens list, using offline fallback...', err);
@@ -74,7 +74,7 @@ export default function Feedback() {
     }
 
     try {
-      const res = await axios.get(`http://localhost:5000/api/tokens/${val}/details`);
+      const res = await axios.get(`/api/tokens/${val}/details`);
       const data = res.data;
       setDdoName(data.psa_ddo);
       setDdoCode(data.psa_ddo_code);
@@ -130,7 +130,7 @@ export default function Feedback() {
         comments
       };
 
-      await axios.post('http://localhost:5000/api/feedback', payload);
+      await axios.post('/api/feedback', payload);
       setSuccess('Feedback submitted successfully! Thank you.');
       
       setSelectedToken('');
