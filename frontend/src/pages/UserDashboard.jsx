@@ -162,14 +162,29 @@ function UserDashboard() {
                     </span>
                   </td>
                   <td className="py-4 px-6">
-                    <span className={`inline-block py-1 px-3.5 rounded-full text-[10px] tracking-wide uppercase border font-extrabold ${getDeptBadgeStyle(tk.department)}`}>
-                      {tk.department}
-                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(tk.department || '').split(', ').map((dept, dIdx) => (
+                        <span key={dIdx} className={`inline-block py-1 px-2.5 rounded-full text-[10px] tracking-wide uppercase border font-extrabold ${getDeptBadgeStyle(dept)}`}>
+                          {dept}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="inline-block py-1 px-3 bg-govGold/10 text-govGold-dark border border-govGold/20 rounded-lg text-xs font-black font-mono">
-                      {tk.table_no || 'Not Allocated'}
-                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(tk.table_no || '').split(', ').map((tNo, tIdx) => {
+                        const isNotAssigned = tNo === 'Not Assigned';
+                        return (
+                          <span key={tIdx} className={`inline-block py-1 px-2.5 rounded-lg text-[10px] md:text-xs font-black font-mono border ${
+                            isNotAssigned 
+                              ? 'bg-red-50 text-red-600 border-red-100' 
+                              : 'bg-govGold/10 text-govGold-dark border-govGold/20'
+                          }`}>
+                            {tNo}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </td>
                   <td className="py-4 px-6 font-mono text-gray-500 font-bold">{tk.psa_code || '-'}</td>
                   <td className="py-4 px-6 text-gray-700 whitespace-normal break-words max-w-md">{tk.psa_name}</td>
