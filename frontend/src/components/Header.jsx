@@ -83,10 +83,12 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Subtitle */}
-        <p className="text-govBlue font-black text-sm md:text-base tracking-wide mt-1.5 leading-relaxed">
-          सरल एकीकृत मध्यम अभिलेख-निधि-पेंशन दोष-हल, आश्वासन एवं निवारण
-        </p>
+        {/* Subtitle: Department Details */}
+        <div className="text-govBlue font-extrabold text-[10px] md:text-xs tracking-wide mt-1.5 leading-tight flex flex-col font-sans uppercase">
+          <span>भारतीय लेखा तथा लेखा-परीक्षा विभाग</span>
+          <span>Indian Audit And Accounts Department</span>
+          <span className="text-gray-600 font-semibold text-[9px] md:text-[10px] mt-0.5">O/o The PR.AG (A&E), West Bengal.</span>
+        </div>
         
         {/* Slogan row with horizontal gold lines and diamond */}
         <div className="flex items-center space-x-3 mt-1.5 w-full max-w-[340px] justify-center">

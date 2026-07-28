@@ -87,8 +87,8 @@ export default function Welcome() {
           <span className="text-sm">♦</span>
         </div>
         
-        <p className="text-gray-700 text-sm md:text-base font-semibold max-w-2xl mx-auto leading-relaxed">
-          A unified platform for Registration, Feedback and Service Access.
+        <p className="text-govBlue font-black text-lg md:text-2xl max-w-4xl mx-auto leading-normal mt-4">
+          सरल एकीकृत मध्यम अभिलेख-निधि-पेंशन दोष-हल, आश्वासन एवं निवारण
         </p>
       </div>
 
