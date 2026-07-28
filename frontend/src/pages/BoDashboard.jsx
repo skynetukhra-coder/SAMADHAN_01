@@ -17,6 +17,7 @@ export default function BoDashboard() {
 
   // Allocation form state
   const [activeTokens, setActiveTokens] = useState([]);
+  const [assignedTokens, setAssignedTokens] = useState([]);
   const [selectedToken, setSelectedToken] = useState('');
   const [selectedTable, setSelectedTable] = useState('');
 
@@ -78,6 +79,11 @@ export default function BoDashboard() {
         params: { group_name: groupName }
       });
       setActiveTokens(activeRes.data);
+
+      const assignedRes = await axios.get('/api/tokens/assigned-list', {
+        params: { group_name: groupName }
+      });
+      setAssignedTokens(assignedRes.data);
     } catch (err) {
       console.error('Error fetching stats and active tokens:', err);
       setStats({
@@ -88,11 +94,16 @@ export default function BoDashboard() {
         recentFeedback: []
       });
       setActiveTokens([]);
+      setAssignedTokens([]);
     }
   };
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(() => {
+      fetchData();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleAllocate = async (e) => {
@@ -533,6 +544,63 @@ export default function BoDashboard() {
             )}
           </button>
         </form>
+      </div>
+
+      {/* Assigned Tokens Real-time Tracking Section */}
+      <div className="bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden glass-card">
+        <div className="py-5 px-6 border-b border-gray-100">
+          <h3 className="text-govBlue font-bold text-xs uppercase tracking-wider flex items-center">
+            {/* Clock/history tracking outline */}
+            <svg className="w-5 h-5 mr-2 text-govGold" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            Assigned Tokens Real-time Tracking
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest">
+                <th className="py-4 px-6">Token Number</th>
+                <th className="py-4 px-6">PSA/DDO Office Name</th>
+                <th className="py-4 px-6">Assigned Table</th>
+                <th className="py-4 px-6">Assigned On</th>
+                <th className="py-4 px-6">AAO Operator</th>
+                <th className="py-4 px-6">AAO Remarks</th>
+                <th className="py-4 px-6 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-xs md:text-sm font-semibold text-gray-800">
+              {assignedTokens.map((tk, idx) => (
+                <tr key={idx} className="hover:bg-slate-50/40 transition-colors">
+                  <td className="py-4 px-6 font-extrabold text-govBlue tracking-wide font-mono">{tk.token_number}</td>
+                  <td className="py-4 px-6">{tk.psa_name}</td>
+                  <td className="py-4 px-6">
+                    <span className="inline-block py-0.5 px-2 bg-govGold/10 text-govGold-dark border border-govGold/20 rounded-md font-bold font-mono">
+                      {tk.table_no}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-gray-500 font-mono">{formatDateTime(tk.allocated_at)}</td>
+                  <td className="py-4 px-6 text-gray-700 font-bold">{tk.aao_name || '-'}</td>
+                  <td className="py-4 px-6 text-gray-655 italic">{tk.remarks || '-'}</td>
+                  <td className="py-4 px-6 text-center">
+                    <span className={`inline-block py-1 px-3 rounded-full text-[10px] tracking-wide uppercase ${getStatusStyle(tk.status)}`}>
+                      {tk.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {assignedTokens.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="py-8 text-center text-gray-400 font-bold uppercase tracking-wider">
+                    No tokens have been assigned yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Recent Feedback Section */}
