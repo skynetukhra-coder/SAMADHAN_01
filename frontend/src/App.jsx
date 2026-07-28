@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Feedback from './pages/Feedback';
 import BoDashboard from './pages/BoDashboard';
 import AaoDashboard from './pages/AaoDashboard';
+import UserDashboard from './pages/UserDashboard';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/dashboard" element={<BoDashboard />} />
             <Route path="/bo_dashboard" element={<BoDashboard />} />
             <Route path="/aao_dashboard" element={<AaoDashboard />} />
+            <Route path="/user_dashboard" element={<UserDashboard />} />
           </Routes>
         </main>
 

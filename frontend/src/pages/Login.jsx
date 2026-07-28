@@ -38,6 +38,8 @@ export default function Login() {
       const designation = response.data.user?.designation;
       if (designation === 'Asst. Accounts Officer' || designation === 'ASSTT. ACCOUNTS OFFICER') {
         navigate('/aao_dashboard');
+      } else if (designation === 'USER') {
+        navigate('/user_dashboard');
       } else {
         navigate('/bo_dashboard');
       }
