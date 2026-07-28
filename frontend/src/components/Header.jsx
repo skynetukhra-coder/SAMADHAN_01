@@ -67,10 +67,10 @@ export default function Header() {
       <div className="flex-1 flex flex-col items-center text-center my-3 lg:my-0">
         
         {/* Department Details (Above SAMADHAN) */}
-        <div className="text-govBlue font-black text-xs md:text-sm tracking-wide mb-2 leading-tight flex flex-col font-sans uppercase">
-          <span>भारतीय लेखा तथा लेखा-परीक्षा विभाग</span>
-          <span>Indian Audit And Accounts Department</span>
-          <span className="text-gray-650 font-bold text-[10px] md:text-xs mt-0.5">O/o The PR.AG (A&E), West Bengal.</span>
+        <div className="text-govBlue font-black text-xs md:text-sm mb-2 leading-tight flex flex-col font-sans uppercase">
+          <span className="tracking-[0.06em]">भारतीय लेखा तथा लेखा-परीक्षा विभाग</span>
+          <span className="tracking-[0.14em]">Indian Audit And Accounts Department</span>
+          <span className="text-gray-650 font-bold text-[10px] md:text-xs mt-0.5 tracking-[0.08em]">O/o The PR.AG (A&E), West Bengal.</span>
         </div>
 
         {/* Title row with gold lines and gold diamond separators */}
