@@ -44,13 +44,8 @@ export default function Feedback() {
         const res = await axios.get('/api/tokens');
         setTokensList(res.data);
       } catch (err) {
-        console.log('Error fetching tokens list, using offline fallback...', err);
-        setTokensList([
-          { token_number: 'TK2024-00125', category: 'Pension' },
-          { token_number: 'TK2024-00118', category: 'Accounts' },
-          { token_number: 'TK2024-00110', category: 'GPF' },
-          { token_number: 'TK2024-00098', category: 'Pension' }
-        ]);
+        console.error('Error fetching tokens list:', err);
+        setTokensList([]);
       }
     };
     fetchTokens();
@@ -86,16 +81,16 @@ export default function Feedback() {
       setHasAccounts(data.hasAccounts !== undefined ? data.hasAccounts : true);
       setHasGpf(data.hasGpf !== undefined ? data.hasGpf : true);
     } catch (err) {
-      console.log('Failed to fetch details. Autofilling mock data.', err);
-      setDdoName('Office of the Accountant General, WB');
-      setDdoCode('DDO-2024-AGWB');
-      setRepName('Rajesh Kumar');
-      setMobile('9876543210');
-      setEmail('rajesh.kumar@gov.in');
-      setAddress('Treasury Buildings, 2 Government Place West, Kolkata - 700001');
-      setHasPension(true);
-      setHasAccounts(true);
-      setHasGpf(true);
+      console.error('Failed to fetch token details:', err);
+      setDdoName('Not found');
+      setDdoCode('');
+      setRepName('');
+      setMobile('');
+      setEmail('');
+      setAddress('');
+      setHasPension(false);
+      setHasAccounts(false);
+      setHasGpf(false);
     }
   };
 
@@ -151,14 +146,7 @@ export default function Feedback() {
 
     } catch (err) {
       console.error(err);
-      if (err.code === 'ERR_NETWORK') {
-        setSuccess('Feedback submitted successfully (Demo Mode)! Thank you.');
-        setTimeout(() => {
-          navigate('/');
-        }, 3000);
-      } else {
-        setError(err.response?.data?.error || 'Failed to submit feedback.');
-      }
+      setError(err.response?.data?.error || 'Failed to submit feedback. Server error.');
     } finally {
       setLoading(false);
     }

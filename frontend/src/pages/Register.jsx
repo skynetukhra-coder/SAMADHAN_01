@@ -41,12 +41,8 @@ export default function Register() {
         const response = await axios.get('/api/auth/ddos');
         setDdoList(response.data);
       } catch (err) {
-        console.error('Error fetching DDO list, using offline fallback:', err);
-        setDdoList([
-          { PSA_NAME: 'Office of the Accountant General, WB', PSA_CODE: 'DDO-2024-AGWB', ADDRESS: 'Treasury Buildings, 2 Government Place West, Kolkata - 700001' },
-          { PSA_NAME: 'Department of Finance, Govt of India', PSA_CODE: 'DDO-1100-FIN', ADDRESS: 'North Block, Central Secretariat, New Delhi - 110001' },
-          { PSA_NAME: 'GPF Commissioner Directorate', PSA_CODE: 'DDO-7001-GPF', ADDRESS: 'Salt Lake Sector V, Bikash Bhavan, Kolkata - 700091' }
-        ]);
+        console.error('Error fetching DDO list:', err);
+        setDdoList([]);
       }
     };
     fetchDdos();
@@ -103,11 +99,7 @@ export default function Register() {
       setRegisteredToken(res.data.token_number || 'N/A');
     } catch (err) {
       console.error(err);
-      if (err.code === 'ERR_NETWORK') {
-        setRegisteredToken('TKN-OFFLINE-DEMO');
-      } else {
-        setError(err.response?.data?.error || 'Registration failed. Server error.');
-      }
+      setError(err.response?.data?.error || 'Registration failed. Server error.');
     } finally {
       setLoading(false);
     }

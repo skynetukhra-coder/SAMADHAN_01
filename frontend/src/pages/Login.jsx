@@ -44,26 +44,7 @@ export default function Login() {
     } catch (err) {
       console.error(err);
       const errMsg = err.response?.data?.error || 'Login failed. Please verify credentials.';
-      
-      if (err.code === 'ERR_NETWORK') {
-        const isAao = identifier.toLowerCase().includes('aao');
-        const mockUser = {
-          rep_name: isAao ? 'AAO Rajesh Kumar' : 'Rajesh Kumar',
-          email: identifier.includes('@') ? identifier : 'rajesh.kumar@gov.in',
-          mobile: !identifier.includes('@') ? identifier : '9876543210',
-          designation: isAao ? 'Asst. Accounts Officer' : 'Sr. Accounts Officer'
-        };
-        localStorage.setItem('token', 'mock_jwt');
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        
-        if (mockUser.designation === 'Asst. Accounts Officer') {
-          navigate('/aao_dashboard');
-        } else {
-          navigate('/bo_dashboard');
-        }
-      } else {
-        setError(errMsg);
-      }
+      setError(errMsg);
     } finally {
       setLoading(false);
     }

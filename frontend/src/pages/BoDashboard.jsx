@@ -56,10 +56,7 @@ export default function BoDashboard() {
     const storedUser = localStorage.getItem('user');
     
     if (!token || !storedUser) {
-      const mockUser = { rep_name: 'Rajesh Kumar', email: 'rajesh.kumar@gov.in' };
-      localStorage.setItem('token', 'mock_jwt');
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      navigate('/login');
     } else {
       setUser(JSON.parse(storedUser));
     }
@@ -82,48 +79,15 @@ export default function BoDashboard() {
       });
       setActiveTokens(activeRes.data);
     } catch (err) {
-      console.log('Error fetching stats, using mock dashboard values.', err);
+      console.error('Error fetching stats and active tokens:', err);
       setStats({
-        totalTokens: 18,
-        inProgress: 6,
-        resolved: 9,
-        totalFeedback: 24,
-        recentFeedback: [
-          {
-            token_number: 'TK2024-00125',
-            category: 'Pension',
-            submitted_on: '2024-05-20T10:45:00.000Z',
-            feedback: 'The staff was helpful and the process was smooth.',
-            status: 'In Progress'
-          },
-          {
-            token_number: 'TK2024-00118',
-            category: 'Accounts',
-            submitted_on: '2024-05-18T14:30:00.000Z',
-            feedback: 'Quick response and issue resolved successfully.',
-            status: 'Resolved'
-          },
-          {
-            token_number: 'TK2024-00110',
-            category: 'GPF',
-            submitted_on: '2024-05-15T11:20:00.000Z',
-            feedback: 'Information provided was clear and accurate.',
-            status: 'Resolved'
-          },
-          {
-            token_number: 'TK2024-00098',
-            category: 'Pension',
-            submitted_on: '2024-05-10T09:15:00.000Z',
-            feedback: 'Need more counters during peak hours.',
-            status: 'Closed'
-          }
-        ]
+        totalTokens: 0,
+        inProgress: 0,
+        resolved: 0,
+        totalFeedback: 0,
+        recentFeedback: []
       });
-
-      setActiveTokens([
-        { token_number: 'TK2024-00085', category: 'Accounts' },
-        { token_number: 'TK2024-00072', category: 'GPF' }
-      ]);
+      setActiveTokens([]);
     }
   };
 
@@ -158,30 +122,7 @@ export default function BoDashboard() {
       fetchData();
     } catch (err) {
       console.error(err);
-      if (err.code === 'ERR_NETWORK') {
-        setSuccess(`Token ${selectedToken} allocated to ${selectedTable} (Demo Mode).`);
-        
-        setStats(prev => ({
-          ...prev,
-          inProgress: prev.inProgress + 1,
-          recentFeedback: [
-            {
-              token_number: selectedToken,
-              category: activeTokens.find(t => t.token_number === selectedToken)?.category || 'General',
-              submitted_on: new Date().toISOString(),
-              feedback: 'Allocated desk',
-              status: 'In Progress'
-            },
-            ...prev.recentFeedback
-          ]
-        }));
-        
-        setActiveTokens(prev => prev.filter(t => t.token_number !== selectedToken));
-        setSelectedToken('');
-        setSelectedTable('');
-      } else {
-        setError(err.response?.data?.error || 'Allocation failed.');
-      }
+      setError(err.response?.data?.error || 'Allocation failed. Server error.');
     } finally {
       setLoading(false);
     }
@@ -534,11 +475,7 @@ export default function BoDashboard() {
                 </option>
               ))}
               {activeTokens.length === 0 && (
-                <>
-                  <option value="TK2024-00129">TK2024-00129 (Pension)</option>
-                  <option value="TK2024-00130">TK2024-00130 (Accounts)</option>
-                  <option value="TK2024-00131">TK2024-00131 (GPF)</option>
-                </>
+                <option disabled value="">No active tokens available</option>
               )}
             </select>
           </div>

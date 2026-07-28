@@ -17,10 +17,7 @@ export default function AaoDashboard() {
     const storedUser = localStorage.getItem('user');
     
     if (!token || !storedUser) {
-      const mockUser = { rep_name: 'AAO Rajesh Kumar', email: 'rajesh.kumar@gov.in' };
-      localStorage.setItem('token', 'mock_jwt');
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      navigate('/login');
     } else {
       const parsed = JSON.parse(storedUser);
       const repNameVal = parsed.rep_name || parsed.full_name || '';
@@ -53,23 +50,8 @@ export default function AaoDashboard() {
       setEditingRemarks(initialRemarks);
     } catch (err) {
       console.error('Error fetching table tokens:', err);
-      // Fallback for Demo/Offline Mode
-      if (err.code === 'ERR_NETWORK') {
-        const mockTableData = [
-          { token_number: 'TK2024-00125', category: 'Pension', allocated_table: tableNum, remarks: 'Audit in progress', status: 'In Progress', submitted_on: '2024-05-20T10:45:00.000Z' },
-          { token_number: 'TK2024-00118', category: 'Accounts', allocated_table: tableNum, remarks: 'Documents checked', status: 'Resolved', submitted_on: '2024-05-18T14:30:00.000Z' },
-          { token_number: 'TK2024-00085', category: 'Accounts', allocated_table: tableNum, remarks: '', status: 'Pending', submitted_on: '2024-05-25T11:00:00.000Z' }
-        ];
-        setTokens(mockTableData.filter(t => t.allocated_table === tableNum));
-        
-        const initialRemarks = {};
-        mockTableData.forEach(t => {
-          initialRemarks[t.token_number] = t.remarks || '';
-        });
-        setEditingRemarks(initialRemarks);
-      } else {
-        setError('Failed to load tokens for the selected table.');
-      }
+      setError('Failed to load tokens for the selected table. Server error.');
+      setTokens([]);
     } finally {
       setLoading(false);
     }
@@ -94,18 +76,7 @@ export default function AaoDashboard() {
       fetchTableTokens(selectedTable);
     } catch (err) {
       console.error('Error updating status:', err);
-      if (err.code === 'ERR_NETWORK') {
-        // Offline demo fallback
-        setTokens(prev => prev.map(t => {
-          if (t.token_number === tokenNum) {
-            return { ...t, status: newStatus, remarks: currentRemarks };
-          }
-          return t;
-        }));
-        setSuccess(`Token ${tokenNum} status updated in Demo Mode.`);
-      } else {
-        setError('Failed to update status.');
-      }
+      setError('Failed to update status. Server error.');
     }
   };
 
@@ -128,17 +99,7 @@ export default function AaoDashboard() {
       fetchTableTokens(selectedTable);
     } catch (err) {
       console.error('Error saving remarks:', err);
-      if (err.code === 'ERR_NETWORK') {
-        setTokens(prev => prev.map(t => {
-          if (t.token_number === tokenNum) {
-            return { ...t, remarks: remarkVal };
-          }
-          return t;
-        }));
-        setSuccess(`Remarks updated in Demo Mode.`);
-      } else {
-        setError('Failed to save remarks.');
-      }
+      setError('Failed to save remarks. Server error.');
     }
   };
 
