@@ -20,9 +20,35 @@ export default function BoDashboard() {
   const [selectedToken, setSelectedToken] = useState('');
   const [selectedTable, setSelectedTable] = useState('');
 
+  const [viewAllActive, setViewAllActive] = useState(false);
+  const [allFeedbacks, setAllFeedbacks] = useState([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAllFeedbacks = async () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        const currentUser = storedUser ? JSON.parse(storedUser) : null;
+        const groupName = currentUser ? currentUser.group_name : null;
+
+        const res = await axios.get('http://localhost:5000/api/feedback/list', {
+          params: { group_name: groupName }
+        });
+        setAllFeedbacks(res.data);
+      } catch (err) {
+        console.error('Error fetching all feedbacks:', err);
+        setAllFeedbacks(stats.recentFeedback);
+      }
+    };
+    if (viewAllActive) {
+      fetchAllFeedbacks();
+    }
+  }, [viewAllActive, stats.recentFeedback]);
 
   // Authentication check
   useEffect(() => {
@@ -187,6 +213,200 @@ export default function BoDashboard() {
     }
   };
 
+  if (viewAllActive) {
+    const filteredFeedbacks = allFeedbacks.filter(fb => {
+      if (!fb.submitted_on) return true;
+      const fbDate = new Date(fb.submitted_on).toISOString().split('T')[0];
+      if (startDate && fbDate < startDate) return false;
+      if (endDate && fbDate > endDate) return false;
+      return true;
+    });
+
+    const downloadCSV = () => {
+      const headers = ['Token Number', 'Category', 'Submitted On', 'Feedback', 'Remarks', 'Status'];
+      const csvRows = filteredFeedbacks.map(fb => [
+        fb.token_number,
+        fb.category,
+        new Date(fb.submitted_on).toLocaleString(),
+        fb.feedback ? fb.feedback.replace(/"/g, '""') : '',
+        fb.remarks ? fb.remarks.replace(/"/g, '""') : '',
+        fb.status
+      ]);
+      const csvContent = [
+        headers.join(','),
+        ...csvRows.map(row => row.map(val => `"${val}"`).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `samadhan_feedbacks_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    const handlePrint = () => {
+      window.print();
+    };
+
+    return (
+      <div className="flex-grow flex flex-col w-full max-w-7xl mx-auto py-8 px-4 md:px-8 space-y-6 relative z-10 font-sans">
+        <style>{`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #print-section, #print-section * {
+              visibility: visible;
+            }
+            #print-section {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
+            .no-print {
+              display: none !important;
+            }
+          }
+        `}</style>
+
+        {/* Back navigation and title row */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-4 no-print">
+          <div>
+            <button
+              onClick={() => setViewAllActive(false)}
+              className="text-govBlue hover:text-govBlue-dark font-extrabold text-xs uppercase tracking-wider flex items-center space-x-1.5 transition mb-1.5 focus:outline-none cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Back to Dashboard</span>
+            </button>
+            <h2 className="text-2xl font-extrabold text-govBlue font-serif">All Received Feedbacks</h2>
+          </div>
+          
+          {/* Print/Download Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={handlePrint}
+              className="bg-white hover:bg-slate-50 text-govBlue font-bold py-2.5 px-4 rounded-lg text-xs md:text-sm tracking-wider uppercase border border-gray-300 shadow-sm transition flex items-center space-x-2 cursor-pointer focus:outline-none"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span>Print / PDF</span>
+            </button>
+            <button
+              onClick={downloadCSV}
+              className="bg-govBlue hover:bg-govBlue-dark text-white font-bold py-2.5 px-4 rounded-lg text-xs md:text-sm tracking-wider uppercase shadow-sm transition flex items-center space-x-2 cursor-pointer focus:outline-none"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Download CSV</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Date Filter Card */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-150 shadow-sm no-print">
+          <h4 className="text-govBlue font-bold text-xs uppercase tracking-wider mb-4 flex items-center">
+            <svg className="w-4 h-4 mr-1.5 text-govGold" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filter Feedbacks by Date Range
+          </h4>
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1 w-full">
+              <label className="block text-gray-500 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-2">From Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full py-2.5 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-govBlue/45 text-sm font-semibold text-gray-800"
+              />
+            </div>
+            <div className="flex-1 w-full">
+              <label className="block text-gray-500 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-2">To Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full py-2.5 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-govBlue/45 text-sm font-semibold text-gray-800"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                }}
+                className="py-2.5 px-4 rounded-lg border border-gray-300 hover:bg-slate-50 text-xs md:text-sm font-bold uppercase text-gray-700 tracking-wider transition cursor-pointer focus:outline-none"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Print Section (Table of Feedbacks) */}
+        <div id="print-section" className="bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden">
+          <div className="hidden print:block text-center py-6 border-b border-gray-200">
+            <h2 className="text-2xl font-extrabold text-govBlue font-serif">SAMADHAN PORTAL</h2>
+            <p className="text-xs uppercase font-extrabold tracking-widest text-govGold mt-1">Grievance & Support Feedbacks Report</p>
+            {startDate || endDate ? (
+              <p className="text-xs text-gray-500 mt-2 font-bold">
+                Filtered Range: {startDate || 'Beginning'} to {endDate || 'Today'}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 text-[10px] md:text-xs font-extrabold text-govBlue uppercase tracking-widest">
+                  <th className="py-4 px-6">Token Number</th>
+                  <th className="py-4 px-6">Category</th>
+                  <th className="py-4 px-6">Submitted On</th>
+                  <th className="py-4 px-6">Feedback</th>
+                  <th className="py-4 px-6">AAO Remarks</th>
+                  <th className="py-4 px-6">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 text-xs md:text-sm font-semibold text-gray-805">
+                {filteredFeedbacks.map((fb, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/40 transition-colors">
+                    <td className="py-4 px-6 font-extrabold text-govBlue tracking-wide">{fb.token_number}</td>
+                    <td className="py-4 px-6">{fb.category}</td>
+                    <td className="py-4 px-6 text-gray-500">{formatDateTime(fb.submitted_on)}</td>
+                    <td className="py-4 px-6 text-gray-700 whitespace-pre-wrap">{fb.feedback}</td>
+                    <td className="py-4 px-6 text-gray-600 italic font-semibold">{fb.remarks || '-'}</td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-block py-1 px-3.5 rounded-full text-[10px] tracking-wide uppercase ${getStatusStyle(fb.status)}`}>
+                        {fb.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {filteredFeedbacks.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="py-12 text-center text-gray-400 font-bold uppercase tracking-wider">
+                      No feedback entries match the filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-grow flex flex-col w-full max-w-7xl mx-auto py-8 px-4 md:px-8 space-y-6 relative z-10 font-sans">
       
@@ -296,7 +516,7 @@ export default function BoDashboard() {
           </div>
         )}
 
-        <form onSubmit={handleAllocate} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mt-6">
+        <form onSubmit={handleAllocate} className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end mt-6">
           <div>
             <label className="block text-govBlue text-xs font-bold uppercase tracking-wider mb-2">
               Token Number <span className="text-red-500">*</span>
@@ -321,6 +541,24 @@ export default function BoDashboard() {
                 </>
               )}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-govBlue text-xs font-bold uppercase tracking-wider mb-2">
+              PSA / DDO Name
+            </label>
+            <input
+              type="text"
+              value={(() => {
+                if (!selectedToken) return '';
+                const [tokenNo, category] = selectedToken.split('|');
+                const found = activeTokens.find(t => t.token_number === tokenNo && t.category === category);
+                return found ? found.psa_name || 'N/A' : '';
+              })()}
+              readOnly
+              placeholder="Auto-filled PSA Name"
+              className="w-full py-3 px-4 rounded-lg border border-gray-300 bg-gray-50 text-sm font-semibold text-gray-500 cursor-not-allowed"
+            />
           </div>
 
           <div>
@@ -369,9 +607,12 @@ export default function BoDashboard() {
             </svg>
             Recent Feedback
           </h3>
-          <a href="#viewall" className="text-govBlue hover:text-govBlue-light font-bold text-xs md:text-sm hover:underline">
+          <button 
+            onClick={() => setViewAllActive(true)}
+            className="text-govBlue hover:text-govBlue-light font-bold text-xs md:text-sm hover:underline cursor-pointer focus:outline-none"
+          >
             View All
-          </a>
+          </button>
         </div>
 
         <div className="overflow-x-auto w-full">
@@ -382,6 +623,7 @@ export default function BoDashboard() {
                 <th className="py-4 px-6">Category</th>
                 <th className="py-4 px-6">Submitted On</th>
                 <th className="py-4 px-6">Feedback</th>
+                <th className="py-4 px-6">AAO Remarks</th>
                 <th className="py-4 px-6">Status</th>
               </tr>
             </thead>
@@ -391,7 +633,8 @@ export default function BoDashboard() {
                   <td className="py-4 px-6 font-extrabold text-govBlue tracking-wide">{fb.token_number}</td>
                   <td className="py-4 px-6">{fb.category}</td>
                   <td className="py-4 px-6 text-gray-500">{formatDateTime(fb.submitted_on)}</td>
-                  <td className="py-4 px-6 text-gray-600 max-w-xs truncate md:max-w-md">{fb.feedback}</td>
+                  <td className="py-4 px-6 text-gray-650 max-w-xs truncate md:max-w-md">{fb.feedback}</td>
+                  <td className="py-4 px-6 text-gray-600 italic font-semibold">{fb.remarks || '-'}</td>
                   <td className="py-4 px-6">
                     <span className={`inline-block py-1 px-3.5 rounded-full text-[10px] tracking-wide uppercase ${getStatusStyle(fb.status)}`}>
                       {fb.status}
