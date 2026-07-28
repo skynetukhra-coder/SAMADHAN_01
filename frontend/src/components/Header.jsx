@@ -66,6 +66,13 @@ export default function Header() {
       {/* Central section: SAMADHAN title */}
       <div className="flex-1 flex flex-col items-center text-center my-3 lg:my-0">
         
+        {/* Department Details (Above SAMADHAN) */}
+        <div className="text-govBlue font-black text-xs md:text-sm tracking-wide mb-2 leading-tight flex flex-col font-sans uppercase">
+          <span>भारतीय लेखा तथा लेखा-परीक्षा विभाग</span>
+          <span>Indian Audit And Accounts Department</span>
+          <span className="text-gray-650 font-bold text-[10px] md:text-xs mt-0.5">O/o The PR.AG (A&E), West Bengal.</span>
+        </div>
+
         {/* Title row with gold lines and gold diamond separators */}
         <div className="flex items-center space-x-4 w-full justify-center">
           <div className="hidden lg:flex items-center space-x-2 flex-1 justify-end max-w-[120px]">
@@ -73,7 +80,7 @@ export default function Header() {
             <span className="text-govGold text-[8px]">♦</span>
           </div>
           
-          <h1 className="text-govBlue font-bold text-4xl md:text-5xl tracking-[0.08em] font-serif uppercase select-none">
+          <h1 className="text-govBlue font-bold text-2xl md:text-3xl tracking-[0.08em] font-serif uppercase select-none">
             SAMADHAN
           </h1>
           
@@ -81,13 +88,6 @@ export default function Header() {
             <span className="text-govGold text-[8px]">♦</span>
             <div className="h-[1.5px] w-16 bg-govGold"></div>
           </div>
-        </div>
-
-        {/* Subtitle: Department Details */}
-        <div className="text-govBlue font-extrabold text-[10px] md:text-xs tracking-wide mt-1.5 leading-tight flex flex-col font-sans uppercase">
-          <span>भारतीय लेखा तथा लेखा-परीक्षा विभाग</span>
-          <span>Indian Audit And Accounts Department</span>
-          <span className="text-gray-600 font-semibold text-[9px] md:text-[10px] mt-0.5">O/o The PR.AG (A&E), West Bengal.</span>
         </div>
         
         {/* Slogan row with horizontal gold lines and diamond */}
