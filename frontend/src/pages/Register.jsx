@@ -75,6 +75,11 @@ export default function Register() {
       return;
     }
 
+    if (mobile.trim().length !== 10) {
+      setError('Mobile Number must be strictly 10 digits.');
+      return;
+    }
+
     const selectedServices = Object.keys(services).filter(k => services[k]);
     if (selectedServices.length === 0) {
       setError('Please select at least one required service.');
@@ -347,8 +352,9 @@ export default function Register() {
                 <input
                   type="tel"
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  placeholder="Enter mobile number"
+                  onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ''))}
+                  maxLength={10}
+                  placeholder="Enter 10-digit mobile number"
                   className="w-full pr-10 pl-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-govBlue/45 text-sm font-semibold text-gray-800"
                   required
                 />
