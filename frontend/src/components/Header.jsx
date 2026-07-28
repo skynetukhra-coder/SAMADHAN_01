@@ -84,7 +84,7 @@ export default function Header() {
         </div>
 
         {/* Subtitle */}
-        <p className="text-govBlue font-extrabold text-xs md:text-sm tracking-wide mt-1">
+        <p className="text-govBlue font-black text-sm md:text-base tracking-wide mt-1.5 leading-relaxed">
           सरल एकीकृत मध्यम अभिलेख-निधि-पेंशन दोष-हल, आश्वासन एवं निवारण
         </p>
         
