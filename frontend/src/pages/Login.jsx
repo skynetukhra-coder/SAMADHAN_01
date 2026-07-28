@@ -40,6 +40,8 @@ export default function Login() {
         navigate('/aao_dashboard');
       } else if (designation === 'USER') {
         navigate('/user_dashboard');
+      } else if (designation === 'ADMIN') {
+        navigate('/admin_dashboard');
       } else {
         navigate('/bo_dashboard');
       }

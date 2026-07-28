@@ -113,7 +113,8 @@ export default function BoDashboard() {
         token_number: tokenNo,
         category: category,
         allocated_table: selectedTable,
-        remarks: ''
+        remarks: '',
+        bo_name: user?.full_name || 'System BO'
       });
 
       setSuccess(`Token ${selectedToken} successfully allocated to ${selectedTable}.`);

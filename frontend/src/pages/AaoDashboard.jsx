@@ -70,7 +70,8 @@ export default function AaoDashboard() {
         token_number: tokenNum,
         status: newStatus,
         remarks: currentRemarks,
-        group_name: user?.group_name
+        group_name: user?.group_name,
+        aao_name: user?.full_name || 'System AAO'
       });
       setSuccess(`Token ${tokenNum} updated to ${newStatus === 'Resolved' ? 'Completed' : newStatus}.`);
       fetchTableTokens(selectedTable);
@@ -93,7 +94,8 @@ export default function AaoDashboard() {
         token_number: tokenNum,
         status: statusVal,
         remarks: remarkVal,
-        group_name: user?.group_name
+        group_name: user?.group_name,
+        aao_name: user?.full_name || 'System AAO'
       });
       setSuccess(`Remarks saved for token ${tokenNum}.`);
       fetchTableTokens(selectedTable);
