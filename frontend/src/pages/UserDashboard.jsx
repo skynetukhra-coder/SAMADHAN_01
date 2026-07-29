@@ -50,7 +50,7 @@ function UserDashboard() {
     return () => clearInterval(pollInterval);
   }, []);
 
-  // Cycle pages every 5 seconds
+  // Cycle pages every 10 seconds
   useEffect(() => {
     const pageInterval = setInterval(() => {
       setTokens((currentTokens) => {
@@ -62,7 +62,7 @@ function UserDashboard() {
         setCurrentPage((prevPage) => (prevPage + 1) % totalPages);
         return currentTokens;
       });
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(pageInterval);
   }, []);
