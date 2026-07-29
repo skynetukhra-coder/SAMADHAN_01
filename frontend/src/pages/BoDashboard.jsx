@@ -521,7 +521,7 @@ export default function BoDashboard() {
               required
             >
               <option value="">Select Table Number</option>
-              {[1, 2, 3, 4, 5, 6].map((num) => (
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
                 <option key={num} value={`Table ${num}`}>{`Table ${num}`}</option>
               ))}
             </select>

@@ -239,7 +239,7 @@ function UserDashboard() {
               ))}
             </div>
             <span className="text-[10px] text-govGold font-black uppercase tracking-widest animate-pulse">
-              Cycling in 5s
+              Cycling in 10s
             </span>
           </div>
         )}

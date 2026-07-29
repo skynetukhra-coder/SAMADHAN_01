@@ -198,7 +198,7 @@ export default function AaoDashboard() {
             className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-govBlue/45 text-sm font-bold text-gray-800"
           >
             <option value="">Select Table Number</option>
-            {[1, 2, 3, 4, 5, 6].map((num) => (
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
               <option key={num} value={`Table ${num}`}>{`Table ${num}`}</option>
             ))}
           </select>
